@@ -10,7 +10,7 @@ const float C_TAO_0 = 20.0;
 const float dv_i = 1.0;
 const float C_LONG_RANGE_STIFF = 0.02;
 const float MAX_DELTA = 0.9;
-const float MAX_SPEED = 32.0;
+const float MAX_SPEED = 128.0;
 const float ksi = 0.1;
 
 float random(uvec3 st) {
@@ -30,6 +30,7 @@ vec2 clamp2D(float vx, float vy, float maxValue) {
   if (lengthV > maxValue) {
     const float mult = (maxValue / lengthV);
     vx *= mult;
+    
     vy *= mult;
   }
   return vec2(vx, vy);
@@ -308,6 +309,13 @@ void moveStage(int idx) {
         {
             locomotion_indices.data[idx] = retargeting_locomotion_indices.data[locomotion_indices.data[idx]];
         }
+    }
+
+    if (int_params.scenario == 7) {
+        const float tilt = 1.3;
+        vec2 direction = normalize(agent_pos.data[idx] - vec2(1000.0));
+        direction = normalize(mix(direction, vec2(-direction.y, direction.x), tilt));
+        agent_pref_vel.data[idx] = direction * agent_base_vel.data[idx];
     }
 
 

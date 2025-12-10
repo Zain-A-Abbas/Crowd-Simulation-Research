@@ -31,7 +31,8 @@ enum Scenarios {
 	OPPOSING_LARGE_GROUPS,
 	CIRCLE_POSITION_EXCHANGE,
 	RETARGETING_TEST,
-	ESCAPE_TEST
+	ESCAPE_TEST,
+	CROWD_CIRCULATING_OBJECT,
 }
 
 const RED_BLACK_AGENTS_CONFIG_FILE: String = "user://red_black_agents_config.json"
@@ -82,6 +83,8 @@ var agent_positions: PackedVector2Array = []
 var agent_velocities: PackedVector2Array = []
 ## Equal to starting velocities.
 var agent_preferred_velocities: PackedVector2Array = []
+## Velocity scalar determined at start of application run
+var agent_base_velocities: PackedFloat32Array = []
 ## Corrections applied to agent positions each frame. z index is used as a counter
 var delta_corrections: PackedVector4Array = []
 
@@ -135,6 +138,8 @@ var agent_position_buffer: RID
 var agent_velocity_buffer: RID
 ## Buffer that stores the preferred velocity of the agents.
 var agent_preferred_velocity_buffer: RID
+## Buffer that stores the base velocities of the agents.
+var agent_base_velocities_buffer: RID
 ## Buffer that stores the delta corrections of the agents.
 var delta_corrections_buffer: RID
 ## Buffer that stores the locomotion targets of the agents.
@@ -201,6 +206,7 @@ var frame: int = 0
 
 ## Runs when the scene is loaded.
 func _ready() -> void:
+	
 	import_config()
 	if SEED == 0:
 		rng.randomize()
@@ -392,7 +398,7 @@ func generate_int_parameter_buffer(stage: int) -> PackedByteArray:
 		parameters["constraint_type"],
 		walls.size(),
 		parameters["iteration_count"],
-		0
+		scenario
 	]
 	
 	return ints.to_byte_array()
@@ -463,38 +469,41 @@ func setup_compute():
 	agent_preferred_velocity_buffer = generate_packed_array_buffer(agent_preferred_velocities)
 	var agent_preferred_velocity_uniform: RDUniform = generate_compute_uniform(agent_preferred_velocity_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 2)
 	
+	agent_base_velocities_buffer = generate_packed_array_buffer(agent_base_velocities)
+	var agent_base_velocities_uniform: RDUniform = generate_compute_uniform(agent_base_velocities_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 3)
+	
 	delta_corrections_buffer = generate_packed_array_buffer(delta_corrections)
-	var delta_corrections_uniform: RDUniform = generate_compute_uniform(delta_corrections_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 3)
+	var delta_corrections_uniform: RDUniform = generate_compute_uniform(delta_corrections_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 4)
 	
 	locomotion_targets_buffer = generate_packed_array_buffer(locomotion_targets)
-	var locomotion_targets_uniform: RDUniform = generate_compute_uniform(locomotion_targets_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 4)
+	var locomotion_targets_uniform: RDUniform = generate_compute_uniform(locomotion_targets_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 5)
 	
 	locomotion_indices_buffer = generate_packed_array_buffer(locomotion_indices)
-	var locomotion_indices_uniform: RDUniform = generate_compute_uniform(locomotion_indices_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 5)
+	var locomotion_indices_uniform: RDUniform = generate_compute_uniform(locomotion_indices_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 6)
 	
 	retargeting_locomotion_indices_buffer = generate_packed_array_buffer(retargeting_locomotion_indices)
-	var retargeting_locomotion_indices_uniform: RDUniform = generate_compute_uniform(retargeting_locomotion_indices_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 6)
+	var retargeting_locomotion_indices_uniform: RDUniform = generate_compute_uniform(retargeting_locomotion_indices_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 7)
 	
 	retargeting_boxes_buffer = generate_packed_array_buffer(retargeting_boxes)
-	var retargeting_boxes_uniform: RDUniform = generate_compute_uniform(retargeting_boxes_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 7)
+	var retargeting_boxes_uniform: RDUniform = generate_compute_uniform(retargeting_boxes_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 8)
 	
 	agent_tracked_buffer = generate_packed_array_buffer(agent_tracked)
-	var agent_tracked_uniform: RDUniform = generate_compute_uniform(agent_tracked_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 8)
+	var agent_tracked_uniform: RDUniform = generate_compute_uniform(agent_tracked_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 9)
 	
 	walls_buffer = generate_packed_array_buffer(walls)
-	var walls_uniform: RDUniform = generate_compute_uniform(walls_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 9)
+	var walls_uniform: RDUniform = generate_compute_uniform(walls_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 10)
 	
 	var debugging_data: PackedFloat32Array = [0.0, 0.0, 0.0, 0.0]
 	debugging_data_buffer = generate_packed_array_buffer(debugging_data)
-	debugging_data_uniform = generate_compute_uniform(debugging_data_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 10)
+	debugging_data_uniform = generate_compute_uniform(debugging_data_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 11)
 	
 	var int_param_buffer_bytes: PackedByteArray = generate_int_parameter_buffer(0)
 	int_param_buffer = rendering_device.storage_buffer_create(int_param_buffer_bytes.size(), int_param_buffer_bytes)
-	int_param_uniform = generate_compute_uniform(int_param_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 11)
+	int_param_uniform = generate_compute_uniform(int_param_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 12)
 	
 	var float_param_buffer_bytes: PackedByteArray = generate_float_parameter_buffer(0)
 	float_param_buffer = rendering_device.storage_buffer_create(float_param_buffer_bytes.size(), float_param_buffer_bytes)
-	float_param_uniform = generate_compute_uniform(float_param_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 12)
+	float_param_uniform = generate_compute_uniform(float_param_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 13)
 	
 	#region Hash Descriptor Set
 	
@@ -542,25 +551,26 @@ func setup_compute():
 		agent_position_uniform, # 0
 		agent_velocity_uniform, # 1
 		agent_preferred_velocity_uniform, # 2
-		delta_corrections_uniform, # 3
-		locomotion_targets_uniform, # 4
-		locomotion_indices_uniform, # 5
-		retargeting_locomotion_indices_uniform, # 6
-		retargeting_boxes_uniform, # 7
-		agent_tracked_uniform, # 8
-		walls_uniform, # 9
-		debugging_data_uniform, # 10
-		int_param_uniform, # 11
-		float_param_uniform # 12
+		agent_base_velocities_uniform, # 3
+		delta_corrections_uniform, # 4
+		locomotion_targets_uniform, # 5
+		locomotion_indices_uniform, # 6
+		retargeting_locomotion_indices_uniform, # 7
+		retargeting_boxes_uniform, # 8
+		agent_tracked_uniform, # 9
+		walls_uniform, # 10
+		debugging_data_uniform, # 11
+		int_param_uniform, # 12
+		float_param_uniform # 13
 	]
 	
 	hash_bindings = [
-		hash_params_uniform, # 7
-		hash_buffer_uniform, # 8
-		hash_sum_buffer_uniform, # 9
-		hash_prefix_sum_buffer_uniform, # 10
-		hash_index_tracker_buffer_uniform, # 11
-		hash_reindex_buffer_uniform, # 12
+		hash_params_uniform, # 0
+		hash_buffer_uniform, # 1
+		hash_sum_buffer_uniform, # 2
+		hash_prefix_sum_buffer_uniform, # 3
+		hash_index_tracker_buffer_uniform, # 4
+		hash_reindex_buffer_uniform, # 5
 	]
 	
 	# For some reason the system cannot recognize multiple images in one descriptor set so I have
@@ -573,7 +583,6 @@ func setup_compute():
 		agent_data_2_buffer_uniform
 	]
 	
-	#uniform_set = rendering_device.uniform_set_create(agent_bindings, agent_compute_shader, 0)
 	agent_set = rendering_device.uniform_set_create(agent_bindings, agent_compute_shader, 0)
 	hash_set = rendering_device.uniform_set_create(hash_bindings, agent_compute_shader, 1)
 	image_set_1 = rendering_device.uniform_set_create(image_bindings_1, agent_compute_shader, 2)

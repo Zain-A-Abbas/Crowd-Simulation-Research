@@ -9,6 +9,7 @@ func distance_constraint(red_black_agents: RedBlackAgents):
 		var starting_vel: Vector2 = Vector2(red_black_agents.rng.randf_range(-1.0, 1.0) * red_black_agents.max_velocity, red_black_agents.rng.randf_range(-1.0, 1.0) * red_black_agents.max_velocity)
 		red_black_agents.agent_velocities.append(starting_vel)
 		red_black_agents.agent_preferred_velocities.append(starting_vel)
+		red_black_agents.agent_base_velocities.append(starting_vel.length())
 		red_black_agents.delta_corrections.append(Vector4.ZERO)
 		red_black_agents.locomotion_targets.append(Vector2.ZERO)
 		red_black_agents.locomotion_indices.append(0)
@@ -33,6 +34,10 @@ func opposing_agents(red_black_agents: RedBlackAgents):
 		Vector2(20, 0),
 		Vector2(-20, 0)
 		])
+	red_black_agents.agent_base_velocities.append_array([
+		20,
+		20
+	])
 	red_black_agents.delta_corrections.append_array([
 		Vector4.ZERO,
 		Vector4.ZERO
@@ -72,6 +77,7 @@ func opposing_groups(red_black_agents: RedBlackAgents, small: bool):
 				red_black_agents.agent_positions.append(group_positions[z] + Vector2(row_position * agent_gap.x, row * agent_gap.y))
 				red_black_agents.agent_velocities.append(group_velocities[z])
 				red_black_agents.agent_preferred_velocities.append(group_velocities[z])
+				red_black_agents.agent_base_velocities.append(group_velocities[z].length())
 				red_black_agents.delta_corrections.append(Vector4.ZERO)
 				red_black_agents.locomotion_targets.append(Vector2.ZERO)
 				red_black_agents.locomotion_indices.append(0)
@@ -108,6 +114,7 @@ func circle_position_exchange(red_black_agents: RedBlackAgents):
 		var starting_vel: Vector2 = Vector2(red_black_agents.max_velocity, 0)
 		red_black_agents.agent_velocities.append(starting_vel)
 		red_black_agents.agent_preferred_velocities.append(starting_vel)
+		red_black_agents.agent_base_velocities.append(starting_vel.length())
 		red_black_agents.delta_corrections.append(Vector4.ZERO)
 		red_black_agents.agent_tracked.append(0.0)
 		red_black_agents.agent_inv_mass.append(red_black_agents.rng.randf_range(0.2, 0.4)) # Unsure as of yet if this range is correct. 
@@ -140,6 +147,7 @@ func escape_test(red_black_agents: RedBlackAgents):
 		var starting_vel: Vector2 = Vector2(red_black_agents.max_velocity, red_black_agents.max_velocity)
 		red_black_agents.agent_velocities.append(starting_vel)
 		red_black_agents.agent_preferred_velocities.append(starting_vel)
+		red_black_agents.agent_base_velocities.append(starting_vel.length())
 		red_black_agents.delta_corrections.append(Vector4.ZERO)
 		
 		red_black_agents.locomotion_indices.append(0)
@@ -164,6 +172,7 @@ func retargeting_test(red_black_agents: RedBlackAgents):
 		var starting_vel: Vector2 = Vector2(red_black_agents.max_velocity, red_black_agents.max_velocity)
 		red_black_agents.agent_velocities.append(starting_vel)
 		red_black_agents.agent_preferred_velocities.append(starting_vel)
+		red_black_agents.agent_base_velocities.append(starting_vel.length())
 		red_black_agents.delta_corrections.append(Vector4.ZERO)
 		red_black_agents.locomotion_indices.append(0)
 		red_black_agents.retargeting_locomotion_indices.append(0)
@@ -171,10 +180,42 @@ func retargeting_test(red_black_agents: RedBlackAgents):
 		red_black_agents.agent_tracked.append(0.0)
 		red_black_agents.agent_inv_mass.append(red_black_agents.rng.randf_range(0.2, 0.4))
 
+func crowd_circulating_object(red_black_agents: RedBlackAgents):
+	red_black_agents.walls.clear()
+	red_black_agents.walls.append_array([
+		Vector4(0, 0, 2000, 10),
+		Vector4(0, 10, 10, 2000),
+		Vector4(10, 1990, 2000, 10),
+		Vector4(1990, 10, 100, 2000),
+		
+		Vector4(940, 950, 120, 100) # Box
+	])
+	red_black_agents.box_rendering.walls.clear()
+	for wall in red_black_agents.walls:
+		red_black_agents.box_rendering.walls.append(wall)
+	
+	red_black_agents.count = red_black_agents.agent_count
+	for agent in red_black_agents.agent_count:
+		var starting_position: Vector2 = Vector2(10 + 1980 * red_black_agents.rng.randf(), 10 + 1980 * red_black_agents.rng.randf())
+		red_black_agents.agent_positions.append(starting_position)
+		var starting_vel: Vector2 = Vector2(red_black_agents.rng.randf_range(-1.0, 1.0) * red_black_agents.max_velocity, red_black_agents.rng.randf_range(-1.0, 1.0) * red_black_agents.max_velocity)
+		red_black_agents.agent_velocities.append(starting_vel)
+		red_black_agents.agent_preferred_velocities.append(starting_vel)
+		red_black_agents.agent_base_velocities.append(starting_vel.length())
+		red_black_agents.delta_corrections.append(Vector4.ZERO)
+		red_black_agents.locomotion_targets.append(Vector2.ZERO)
+		red_black_agents.locomotion_indices.append(0)
+		red_black_agents.retargeting_locomotion_indices.append(0)
+		red_black_agents.retargeting_boxes.append(Vector4.ZERO)
+		red_black_agents.agent_tracked.append(0.0)
+		red_black_agents.agent_inv_mass.append(red_black_agents.rng.randf_range(0.2, 0.4)) # Unsure as of yet if this range is correct. 
+		#agent_radii.append(radius)
+
 func generate_agents(red_black_agents: RedBlackAgents):
 	red_black_agents.agent_positions.clear()
 	red_black_agents.agent_velocities.clear()
 	red_black_agents.agent_preferred_velocities.clear()
+	red_black_agents.agent_base_velocities.clear()
 	red_black_agents.delta_corrections.clear()
 	red_black_agents.agent_tracked.clear()
 	red_black_agents.agent_inv_mass.clear()
@@ -194,6 +235,8 @@ func generate_agents(red_black_agents: RedBlackAgents):
 			escape_test(red_black_agents)
 		RedBlackAgents.Scenarios.RETARGETING_TEST:
 			retargeting_test(red_black_agents)
+		RedBlackAgents.Scenarios.CROWD_CIRCULATING_OBJECT:
+			crowd_circulating_object(red_black_agents)
 	
 	red_black_agents.agent_positions.append_array(red_black_agents.agent_positions.duplicate())
 	red_black_agents.count = red_black_agents.agent_count

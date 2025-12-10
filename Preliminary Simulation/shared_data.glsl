@@ -12,49 +12,54 @@ layout(set = 0, binding = 2, std430) restrict buffer PreferredVelocity {
     vec2 data[];
 } agent_pref_vel;
 
+layout(set = 0, binding = 3, std430) restrict buffer BaseVelocity {
+    float data[];
+} agent_base_vel;
+
 // z index functions as a counter
-layout(set = 0, binding = 3, std430) restrict buffer DeltaCorrections {
+layout(set = 0, binding = 4, std430) restrict buffer DeltaCorrections {
     vec4 data[];
 } delta_corrections;
 
-layout (set = 0, binding = 4, std430) restrict buffer LocomotionTarget {
+layout (set = 0, binding = 5, std430) restrict buffer LocomotionTarget {
     vec2 data[];
 } locomotion_targets;
 
-layout (set = 0, binding = 5, std430) restrict buffer LocomotionIndex {
+layout (set = 0, binding = 6, std430) restrict buffer LocomotionIndex {
     int data[];
 } locomotion_indices;
 
 // the locomotion target that this box points to once an agent steps inside
 // for this to work, the indices of the locomotion target must match the index of the box
 // if an agent is going for locomotion_targets.data[0], then it will ONLY check if it is inside retargeting_boxes.data[0]
-layout (set = 0, binding = 6, std430) restrict buffer RetargetingLocomotionIndices {
+layout (set = 0, binding = 7, std430) restrict buffer RetargetingLocomotionIndices {
     int data[];
 } retargeting_locomotion_indices;
 
-layout (set = 0, binding = 7, std430) restrict buffer RetargetingBox {
+// When stepping inside a box of a certain index, check that box's index in this array to determine where that agent should go next
+// e.g. [1, 2, 2] means "When reached box 0, go to box 1; When reached box 1, go to box 2; When reached box 2, go to box 2"
+layout (set = 0, binding = 8, std430) restrict buffer RetargetingBox {
     vec4 data[];
 } retargeting_boxes;
 
-
 // If "true" then this agent is close enough to the currently selected agent (and in its spatial hash) for showing a different color
-layout(set = 0, binding = 8, std430) restrict buffer Tracked {
+layout(set = 0, binding = 9, std430) restrict buffer Tracked {
     float data[];
 } agent_tracked;
 
-layout(set = 0, binding = 9, std430) restrict buffer Walls {
+layout(set = 0, binding = 10, std430) restrict buffer Walls {
     vec4 data[]; // x and y are positions, z and w are size
 } walls;
 
 //  Stores information used in the debugging process.
-layout(set = 0, binding = 10, std430) restrict buffer DebuggingData {
+layout(set = 0, binding = 11, std430) restrict buffer DebuggingData {
     int tracked_idx; // Stores the idx of an agent being "tracked" by clicking on it. As it's a float this will only be accurate up until 16,777,216 which should be fine
     float padding; // unused as of yet
     float padding_2; // unused as of yet
     float padding_3; // unused as of yet
 } debugging_data;
 
-layout (set = 0, binding = 11, std430) restrict buffer IntParams {
+layout (set = 0, binding = 12, std430) restrict buffer IntParams {
     int agent_count; // 0
     int stage; // 4
     int use_spatial_hash; // 8
@@ -62,11 +67,11 @@ layout (set = 0, binding = 11, std430) restrict buffer IntParams {
     int constraint_type; // 0
     int wall_count; // 4
     int iteration_count; // 8
-    int padding_2; // 12
+    int scenario; // 12
 } int_params;
 
 // Parameters that are exposed/decided on the CPU-side. Stores data typically not expected to be changed once it reaches the GPU.
-layout(set = 0, binding = 12, std430) restrict buffer FloatParams {
+layout(set = 0, binding = 13, std430) restrict buffer FloatParams {
     float image_size; // 0 (Counting byte alignment)
     float world_width; // 4
     float world_height; // 8

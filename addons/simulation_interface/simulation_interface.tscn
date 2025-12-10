@@ -46,7 +46,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(128, 0)
 layout_mode = 2
 min_value = 1.0
-max_value = 1.04858e+06
+max_value = 1048580.0
 value = 512.0
 rounded = true
 
@@ -61,7 +61,7 @@ text = "Scenario"
 unique_name_in_owner = true
 layout_mode = 2
 selected = 0
-item_count = 7
+item_count = 8
 popup/item_0/text = "DISTANCE_CONSTRAINT"
 popup/item_0/id = 0
 popup/item_1/text = "OPPOSING_AGENTS"
@@ -76,6 +76,8 @@ popup/item_5/text = "RETARGETING_TEST"
 popup/item_5/id = 5
 popup/item_6/text = "ESCAPE_TEST"
 popup/item_6/id = 6
+popup/item_7/text = "CROWD_CIRCULATING_OBJECT"
+popup/item_7/id = 7
 
 [node name="HBoxContainer8" type="HBoxContainer" parent="VBoxContainer/VBoxContainer"]
 layout_mode = 2
@@ -106,7 +108,7 @@ text = "X Distance (from opposing edges)"
 [node name="OpposingDistanceSpinboxX" type="SpinBox" parent="VBoxContainer/VBoxContainer/OpposingAgentsOptions"]
 unique_name_in_owner = true
 layout_mode = 2
-max_value = 1.67772e+07
+max_value = 16777200.0
 value = 100.0
 rounded = true
 
@@ -117,7 +119,7 @@ text = "Y Offset"
 [node name="OpposingDistanceSpinboxY" type="SpinBox" parent="VBoxContainer/VBoxContainer/OpposingAgentsOptions"]
 unique_name_in_owner = true
 layout_mode = 2
-max_value = 1.67772e+07
+max_value = 16777200.0
 value = 4.0
 rounded = true
 
@@ -149,7 +151,7 @@ text = "Max Velocity"
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 1.0
-max_value = 1.04858e+06
+max_value = 1048580.0
 value = 16.0
 rounded = true
 
@@ -179,7 +181,7 @@ text = "Neighbour Visualization Radius"
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 8.0
-max_value = 1.04858e+06
+max_value = 1048580.0
 value = 128.0
 rounded = true
 

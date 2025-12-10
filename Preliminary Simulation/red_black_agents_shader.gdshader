@@ -23,7 +23,6 @@ void process() {
 	// The b and g color channels store the agent's velocity (used for rotation)
 	vec4 agent_params = texelFetch(agent_data, texel_pos, 0);
 	
-	
 	// Rotation
 	float dir = atan(agent_params.a, agent_params.b) + PI / 2.0;
 	TRANSFORM[0].x = cos(dir);

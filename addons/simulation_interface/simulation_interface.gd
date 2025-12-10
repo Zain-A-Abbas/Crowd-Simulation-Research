@@ -90,6 +90,25 @@ func set_error_text(text: String):
 func set_scenario(idx: int):
 	circle_simulation_options.visible = is_scenario(RedBlackAgents.Scenarios.CIRCLE_POSITION_EXCHANGE)
 	opposing_agents_options.visible = is_scenario(RedBlackAgents.Scenarios.OPPOSING_SMALL_GROUPS) || is_scenario(RedBlackAgents.Scenarios.OPPOSING_LARGE_GROUPS)
+	
+	if is_scenario(RedBlackAgents.Scenarios.CROWD_CIRCULATING_OBJECT):
+		window_x_spin_box.editable = false
+		window_y_spin_box.editable = false
+		world_width_spin_box.editable = false
+		world_height_spin_box.editable = false
+		hashes_spin_box.editable = false
+		
+		window_x_spin_box.value = 1000
+		window_y_spin_box.value = 1000
+		world_width_spin_box.value = 2000
+		world_height_spin_box.value = 2000
+		hashes_spin_box.value = 50
+	else:
+		window_x_spin_box.editable = true
+		window_y_spin_box.editable = true
+		world_width_spin_box.editable = true
+		world_height_spin_box.editable = true
+		hashes_spin_box.editable = true
 
 func is_scenario(scenario: RedBlackAgents.Scenarios):
 	var scenario_text: String = scenario_option.get_item_text(scenario_option.selected)

@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://dlk7k5x775gds"
+path="res://.godot/imported/bin_operations.glsl-1d5dd7c5ce95c4831aaabfa2661a3a63.res"
+
+[deps]
+
+source_file="res://Simulation/bin_operations.glsl"
+dest_files=["res://.godot/imported/bin_operations.glsl-1d5dd7c5ce95c4831aaabfa2661a3a63.res"]
+
+[params]
+

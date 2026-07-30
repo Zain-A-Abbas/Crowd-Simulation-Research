@@ -313,7 +313,7 @@ func _process(delta: float) -> void:
 	var seconds: int = (time_passed % 60000) / 1000
 	var ms: int = time_passed % 1000
 	time_passed_label.text = "%02d:%02d:%02d.%03d" % [hours, minutes, seconds, ms]
-	fps_label.text = "FPS: " + str(Engine.get_frames_per_second())
+	fps_label.text = "FPS: " + str(Performance.get_monitor(Performance.TIME_FPS))
 	
 	var finalDelta: float = delta * float(!paused)
 	RenderingServer.call_on_render_thread(gpu_process.bind(finalDelta))

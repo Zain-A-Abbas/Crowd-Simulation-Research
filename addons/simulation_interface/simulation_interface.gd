@@ -32,7 +32,7 @@ const WALL_INFORMATION = preload("res://addons/simulation_interface/wall_informa
 @onready var error_label: Label = %ErrorLabel
 
 var config_file_location: String = RedBlackAgents.RED_BLACK_AGENTS_CONFIG_FILE
-const RED_BLACK_AGENTS_PATH: String = "res://Preliminary Simulation/red_black_agents.tscn"
+const RED_BLACK_AGENTS_PATH: String = "res://Simulation/red_black_agents.tscn"
 
 func _ready() -> void:
 	circle_simulation_options.visible = false

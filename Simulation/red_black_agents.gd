@@ -447,12 +447,12 @@ func setup_compute():
 	rendering_device = RenderingServer.get_rendering_device()
 	
 	# Compiles the .glsl to spirv, and then creates the shader instance
-	var shader: RDShaderFile = load("res://Preliminary Simulation/red_black_agents.glsl")
+	var shader: RDShaderFile = load("res://Simulation/red_black_agents.glsl")
 	var compiled_shader: RDShaderSPIRV = shader.get_spirv()
 	agent_compute_shader = rendering_device.shader_create_from_spirv(compiled_shader)
 	agent_pipeline = rendering_device.compute_pipeline_create(agent_compute_shader)
 	
-	shader = load("res://Preliminary Simulation/bin_operations.glsl")
+	shader = load("res://Simulation/bin_operations.glsl")
 	compiled_shader = shader.get_spirv()
 	hash_shader = rendering_device.shader_create_from_spirv(compiled_shader)
 	hash_pipeline = rendering_device.compute_pipeline_create(hash_shader)

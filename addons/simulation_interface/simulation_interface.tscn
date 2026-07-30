@@ -1,9 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://bdbgrdh13wotj"]
+[gd_scene format=3 uid="uid://bdbgrdh13wotj"]
 
 [ext_resource type="Script" uid="uid://ddpo80wpe4r7n" path="res://addons/simulation_interface/simulation_interface.gd" id="1_picg5"]
 [ext_resource type="Theme" uid="uid://c456o0y7vi54c" path="res://addons/simulation_interface/interface_theme.tres" id="1_xvj4m"]
 
-[node name="SimulationInterface" type="MarginContainer"]
+[node name="SimulationInterface" type="MarginContainer" unique_id=385893665]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -17,31 +17,31 @@ theme_override_constants/margin_bottom = 32
 script = ExtResource("1_picg5")
 metadata/_edit_lock_ = true
 
-[node name="VBoxContainer" type="ScrollContainer" parent="."]
+[node name="VBoxContainer" type="ScrollContainer" parent="." unique_id=1398278307]
 custom_minimum_size = Vector2(0, 576)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer" unique_id=2121938704]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer"]
+[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer" unique_id=1255496951]
 layout_mode = 2
 theme_type_variation = &"Heading"
 text = "Simulation"
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/VBoxContainer" unique_id=271694736]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer"]
+[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer" unique_id=509226458]
 layout_mode = 2
 text = "Agent Count"
 
-[node name="AgentCountSpinBox" type="SpinBox" parent="VBoxContainer/VBoxContainer/HBoxContainer"]
+[node name="AgentCountSpinBox" type="SpinBox" parent="VBoxContainer/VBoxContainer/HBoxContainer" unique_id=1541839126]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(128, 0)
 layout_mode = 2
@@ -50,14 +50,14 @@ max_value = 1048580.0
 value = 512.0
 rounded = true
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="VBoxContainer/VBoxContainer"]
+[node name="HBoxContainer2" type="HBoxContainer" parent="VBoxContainer/VBoxContainer" unique_id=828897656]
 layout_mode = 2
 
-[node name="Scenario" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer2"]
+[node name="Scenario" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer2" unique_id=1366449793]
 layout_mode = 2
 text = "Scenario"
 
-[node name="ScenarioOption" type="OptionButton" parent="VBoxContainer/VBoxContainer/HBoxContainer2"]
+[node name="ScenarioOption" type="OptionButton" parent="VBoxContainer/VBoxContainer/HBoxContainer2" unique_id=1502061790]
 unique_name_in_owner = true
 layout_mode = 2
 selected = 0
@@ -79,14 +79,14 @@ popup/item_6/id = 6
 popup/item_7/text = "CROWD_CIRCULATING_OBJECT"
 popup/item_7/id = 7
 
-[node name="HBoxContainer8" type="HBoxContainer" parent="VBoxContainer/VBoxContainer"]
+[node name="HBoxContainer8" type="HBoxContainer" parent="VBoxContainer/VBoxContainer" unique_id=1041219543]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer8"]
+[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer8" unique_id=701809242]
 layout_mode = 2
 text = "Constraint Type"
 
-[node name="ConstraintType" type="OptionButton" parent="VBoxContainer/VBoxContainer/HBoxContainer8"]
+[node name="ConstraintType" type="OptionButton" parent="VBoxContainer/VBoxContainer/HBoxContainer8" unique_id=856424340]
 unique_name_in_owner = true
 layout_mode = 2
 selected = 1
@@ -96,43 +96,43 @@ popup/item_0/id = 0
 popup/item_1/text = "Short Range"
 popup/item_1/id = 1
 
-[node name="OpposingAgentsOptions" type="HBoxContainer" parent="VBoxContainer/VBoxContainer"]
+[node name="OpposingAgentsOptions" type="HBoxContainer" parent="VBoxContainer/VBoxContainer" unique_id=2069990837]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/OpposingAgentsOptions"]
+[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/OpposingAgentsOptions" unique_id=574394835]
 layout_mode = 2
 text = "X Distance (from opposing edges)"
 
-[node name="OpposingDistanceSpinboxX" type="SpinBox" parent="VBoxContainer/VBoxContainer/OpposingAgentsOptions"]
+[node name="OpposingDistanceSpinboxX" type="SpinBox" parent="VBoxContainer/VBoxContainer/OpposingAgentsOptions" unique_id=363075662]
 unique_name_in_owner = true
 layout_mode = 2
 max_value = 16777200.0
 value = 100.0
 rounded = true
 
-[node name="Label2" type="Label" parent="VBoxContainer/VBoxContainer/OpposingAgentsOptions"]
+[node name="Label2" type="Label" parent="VBoxContainer/VBoxContainer/OpposingAgentsOptions" unique_id=12064524]
 layout_mode = 2
 text = "Y Offset"
 
-[node name="OpposingDistanceSpinboxY" type="SpinBox" parent="VBoxContainer/VBoxContainer/OpposingAgentsOptions"]
+[node name="OpposingDistanceSpinboxY" type="SpinBox" parent="VBoxContainer/VBoxContainer/OpposingAgentsOptions" unique_id=1642577237]
 unique_name_in_owner = true
 layout_mode = 2
 max_value = 16777200.0
 value = 4.0
 rounded = true
 
-[node name="CircleSimulationOptions" type="HBoxContainer" parent="VBoxContainer/VBoxContainer"]
+[node name="CircleSimulationOptions" type="HBoxContainer" parent="VBoxContainer/VBoxContainer" unique_id=1214507704]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/CircleSimulationOptions"]
+[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/CircleSimulationOptions" unique_id=828757587]
 layout_mode = 2
 text = "Circle Radius"
 
-[node name="CircleRadiusSpinbox" type="SpinBox" parent="VBoxContainer/VBoxContainer/CircleSimulationOptions"]
+[node name="CircleRadiusSpinbox" type="SpinBox" parent="VBoxContainer/VBoxContainer/CircleSimulationOptions" unique_id=839000975]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 32.0
@@ -140,14 +140,14 @@ max_value = 4096.0
 value = 256.0
 rounded = true
 
-[node name="HBoxContainer3" type="HBoxContainer" parent="VBoxContainer/VBoxContainer"]
+[node name="HBoxContainer3" type="HBoxContainer" parent="VBoxContainer/VBoxContainer" unique_id=1348941326]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer3"]
+[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer3" unique_id=36002134]
 layout_mode = 2
 text = "Max Velocity"
 
-[node name="MaxVelocitySpinbox" type="SpinBox" parent="VBoxContainer/VBoxContainer/HBoxContainer3"]
+[node name="MaxVelocitySpinbox" type="SpinBox" parent="VBoxContainer/VBoxContainer/HBoxContainer3" unique_id=526903691]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 1.0
@@ -155,14 +155,14 @@ max_value = 1048580.0
 value = 16.0
 rounded = true
 
-[node name="HBoxContainer4" type="HBoxContainer" parent="VBoxContainer/VBoxContainer"]
+[node name="HBoxContainer4" type="HBoxContainer" parent="VBoxContainer/VBoxContainer" unique_id=595955091]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer4"]
+[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer4" unique_id=711150536]
 layout_mode = 2
 text = "Radius"
 
-[node name="RadiusSpinBox" type="SpinBox" parent="VBoxContainer/VBoxContainer/HBoxContainer4"]
+[node name="RadiusSpinBox" type="SpinBox" parent="VBoxContainer/VBoxContainer/HBoxContainer4" unique_id=1139121988]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 1.0
@@ -170,14 +170,14 @@ max_value = 64.0
 value = 8.0
 rounded = true
 
-[node name="HBoxContainer7" type="HBoxContainer" parent="VBoxContainer/VBoxContainer"]
+[node name="HBoxContainer7" type="HBoxContainer" parent="VBoxContainer/VBoxContainer" unique_id=430458789]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer7"]
+[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer7" unique_id=269735975]
 layout_mode = 2
 text = "Neighbour Visualization Radius"
 
-[node name="NeighbourRadiusSpinBox" type="SpinBox" parent="VBoxContainer/VBoxContainer/HBoxContainer7"]
+[node name="NeighbourRadiusSpinBox" type="SpinBox" parent="VBoxContainer/VBoxContainer/HBoxContainer7" unique_id=1553081691]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 8.0
@@ -185,123 +185,123 @@ max_value = 1048580.0
 value = 128.0
 rounded = true
 
-[node name="HBoxContainer5" type="HBoxContainer" parent="VBoxContainer/VBoxContainer"]
+[node name="HBoxContainer5" type="HBoxContainer" parent="VBoxContainer/VBoxContainer" unique_id=1197714749]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer5"]
+[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer5" unique_id=154810953]
 layout_mode = 2
 text = "Window Width"
 
-[node name="WindowXSpinBox" type="SpinBox" parent="VBoxContainer/VBoxContainer/HBoxContainer5"]
+[node name="WindowXSpinBox" type="SpinBox" parent="VBoxContainer/VBoxContainer/HBoxContainer5" unique_id=1455008527]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 1.0
 max_value = 10000.0
 value = 1024.0
 
-[node name="Label2" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer5"]
+[node name="Label2" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer5" unique_id=814617885]
 layout_mode = 2
 text = "Window Height"
 
-[node name="WindowYSpinBox" type="SpinBox" parent="VBoxContainer/VBoxContainer/HBoxContainer5"]
+[node name="WindowYSpinBox" type="SpinBox" parent="VBoxContainer/VBoxContainer/HBoxContainer5" unique_id=687176838]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 1.0
 max_value = 10000.0
 value = 1024.0
 
-[node name="HBoxContainer6" type="HBoxContainer" parent="VBoxContainer/VBoxContainer"]
+[node name="HBoxContainer6" type="HBoxContainer" parent="VBoxContainer/VBoxContainer" unique_id=1318902651]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer6"]
+[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer6" unique_id=1463486340]
 layout_mode = 2
 text = "World Width"
 
-[node name="WorldWidthSpinBox" type="SpinBox" parent="VBoxContainer/VBoxContainer/HBoxContainer6"]
+[node name="WorldWidthSpinBox" type="SpinBox" parent="VBoxContainer/VBoxContainer/HBoxContainer6" unique_id=679504318]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 1.0
 max_value = 131072.0
 value = 1024.0
 
-[node name="Label2" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer6"]
+[node name="Label2" type="Label" parent="VBoxContainer/VBoxContainer/HBoxContainer6" unique_id=1618751054]
 layout_mode = 2
 text = "World Height"
 
-[node name="WorldHeightSpinBox" type="SpinBox" parent="VBoxContainer/VBoxContainer/HBoxContainer6"]
+[node name="WorldHeightSpinBox" type="SpinBox" parent="VBoxContainer/VBoxContainer/HBoxContainer6" unique_id=1096775632]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 1.0
 max_value = 131072.0
 value = 1024.0
 
-[node name="SpatialHashesToggle" type="CheckButton" parent="VBoxContainer/VBoxContainer"]
+[node name="SpatialHashesToggle" type="CheckButton" parent="VBoxContainer/VBoxContainer" unique_id=1208667727]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 0
 button_pressed = true
 text = "Use Spatial Hashes"
 
-[node name="HashSettingsHbox" type="HBoxContainer" parent="VBoxContainer/VBoxContainer"]
+[node name="HashSettingsHbox" type="HBoxContainer" parent="VBoxContainer/VBoxContainer" unique_id=499349251]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/HashSettingsHbox"]
+[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/HashSettingsHbox" unique_id=849547154]
 layout_mode = 2
 text = "Spatial Hash Size"
 
-[node name="HashesSpinBox" type="SpinBox" parent="VBoxContainer/VBoxContainer/HashSettingsHbox"]
+[node name="HashesSpinBox" type="SpinBox" parent="VBoxContainer/VBoxContainer/HashSettingsHbox" unique_id=1181056056]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 1.0
 max_value = 1024.0
 value = 64.0
 
-[node name="IterationCountSettingsHbox" type="HBoxContainer" parent="VBoxContainer/VBoxContainer"]
+[node name="IterationCountSettingsHbox" type="HBoxContainer" parent="VBoxContainer/VBoxContainer" unique_id=2095776933]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/IterationCountSettingsHbox"]
+[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/IterationCountSettingsHbox" unique_id=1165770975]
 layout_mode = 2
 text = "Iteration Count"
 
-[node name="IterationCountSpinbox" type="SpinBox" parent="VBoxContainer/VBoxContainer/IterationCountSettingsHbox"]
+[node name="IterationCountSpinbox" type="SpinBox" parent="VBoxContainer/VBoxContainer/IterationCountSettingsHbox" unique_id=1461931980]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 1.0
 max_value = 32.0
 value = 1.0
 
-[node name="HSeparator" type="HSeparator" parent="VBoxContainer/VBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer/VBoxContainer" unique_id=1506299880]
 layout_mode = 2
 
-[node name="AddWallButton" type="Button" parent="VBoxContainer/VBoxContainer"]
+[node name="AddWallButton" type="Button" parent="VBoxContainer/VBoxContainer" unique_id=1380003691]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 0
 text = "Add Collision Wall"
 
-[node name="WallInstanceVBox" type="VBoxContainer" parent="VBoxContainer/VBoxContainer"]
+[node name="WallInstanceVBox" type="VBoxContainer" parent="VBoxContainer/VBoxContainer" unique_id=1810128188]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 0
 
-[node name="RenderingCheckBox" type="CheckBox" parent="VBoxContainer/VBoxContainer"]
+[node name="RenderingCheckBox" type="CheckBox" parent="VBoxContainer/VBoxContainer" unique_id=1511886626]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Disable Rendering"
 
-[node name="SaveCheckBox" type="CheckBox" parent="VBoxContainer/VBoxContainer"]
+[node name="SaveCheckBox" type="CheckBox" parent="VBoxContainer/VBoxContainer" unique_id=1340011820]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Save Simulation"
 
-[node name="StartButton" type="Button" parent="VBoxContainer/VBoxContainer"]
+[node name="StartButton" type="Button" parent="VBoxContainer/VBoxContainer" unique_id=170083083]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Run Simulation"
 
-[node name="ErrorLabel" type="Label" parent="VBoxContainer/VBoxContainer"]
+[node name="ErrorLabel" type="Label" parent="VBoxContainer/VBoxContainer" unique_id=460237589]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.245241, 0.187845, 1)

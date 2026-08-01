@@ -37,12 +37,10 @@ enum Scenarios {
 
 const RED_BLACK_AGENTS_CONFIG_FILE: String = "user://red_black_agents_config.json"
 
-# If not set to 0, then all agents will spawn in the same locations with the same velocities
-# (assuming all other variables are identical)
-# DOES NOT CURRENTLY WORK WITH LONG RANGE CONSTAINT
+# The seed for the random number generator
 const SEED: int = 0
 
-#region The follow parameters are set based on the selected parameters in the Simulation Interface
+#region The following parameters are explicitly chosen based on the selected parameters in the Simulation Interface
 ## The currently chosen scenario
 var scenario: Scenarios = Scenarios.DISTANCE_CONSTRAINT
 
@@ -60,12 +58,13 @@ var world_size: Vector2 = Vector2.ZERO
 
 ## Hash args
 var use_spatial_hash: bool = false
-var hash_count: int = 256
+var hash_size: int = 32
 var horizontal_hash_count: int = 16
 var vertical_hash_count: int = 16
 
 #endregion
 
+#region The following parameters are determined based on the above ones, by agent_generator.gd
 ## Size of the textures that store the agent data.
 var image_size: int = 0
 
@@ -74,7 +73,7 @@ var count: int = 0
 
 ## Texture 1 stores the position and color of each agent. RD (Rendering Device) texture allows mapping the image data to the Vulkan logical device.
 var agent_data_1_texture_rd: Texture2DRD
-## Texture 2 is not currently used.
+## Texture 2 is used to select an agent to highlight it on the simulation, and see what other agents are able to collide with it.
 var agent_data_2_texture_rd: Texture2DRD
 
 ## Starting positions.
@@ -113,8 +112,17 @@ var agent_radii: PackedFloat32Array = []
 ## Squared radius of the individual agents. Only used when performing a simulation where agents have variable sizes.
 var agent_radii_sqr: PackedFloat32Array = []
 
+var hash_count: int = 0
+
+#endregion
+
+var agent_data_descriptor: DescriptorSetResource = DescriptorSetResource.new()
+var spatial_hash_descriptor: DescriptorSetResource = DescriptorSetResource.new()
+var image_descriptor: DescriptorSetResource = DescriptorSetResource.new()
+var shared_parameters_descriptor: DescriptorSetResource = DescriptorSetResource.new()
+
 ## The logical rendering device; allows for interaction with the low-level graphics API.
-var rendering_device: RenderingDevice
+var rendering_device: RenderingDevice = RenderingServer.get_rendering_device()
 
 ## The shader instance created from SPIR-V.
 var agent_compute_shader: RID
@@ -123,68 +131,17 @@ var agent_pipeline: RID
 ## The bindings used to create the uniforms from.
 var agent_bindings: Array[RDUniform]
 var hash_bindings: Array[RDUniform]
-var image_bindings_1: Array[RDUniform]
-var image_bindings_2: Array[RDUniform]
-## The uniform set holding all the GPU data.
-var uniform_set: RID
+
+## References to the actual descriptor sets
 var agent_set: RID
 var hash_set: RID
-var image_set_1: RID
-var image_set_2: RID
+var image_set: RID
+var shared_parameters_set: RID
 
-## Buffer that stores the position of the agents.
-var agent_position_buffer: RID
-## Buffer that stores the velocity of the agents.
-var agent_velocity_buffer: RID
-## Buffer that stores the preferred velocity of the agents.
-var agent_preferred_velocity_buffer: RID
-## Buffer that stores the base velocities of the agents.
-var agent_base_velocities_buffer: RID
-## Buffer that stores the delta corrections of the agents.
-var delta_corrections_buffer: RID
-## Buffer that stores the locomotion targets of the agents.
-var locomotion_targets_buffer: RID
-## Buffer that stores the indices of the locomotion target each agent moves towards.
-var locomotion_indices_buffer: RID
-var retargeting_locomotion_indices_buffer: RID
-var retargeting_boxes_buffer: RID
-## Buffer that stores the walls.
-var walls_buffer: RID
-## Buffer that stores the tracking data of the agents.
-var agent_tracked_buffer: RID
-## Buffer that stores the radii of the agents. Only used when performing a simulation where agents have variable sizes.
-var agent_radii_buffer: RID
-## Buffer that stores the squared radii of the agents. Only used when performing a simulation where agents have variable sizes.
-var agent_radii_squared_buffer: RID
-## Buffer that stores the first data-storing texture.
-var agent_data_1_buffer: RID
-## Buffer that stores the second data-storing texture.
-var agent_data_2_buffer: RID
-
-## Buffer that stores the debugging uniform.
-var debugging_data_buffer: RID
-## Uniform for the previou sbuffer
-var debugging_data_uniform: RDUniform
-
-## Buffers that store the tunable parameters.
-var int_param_buffer: RID
-var float_param_buffer: RID
-## Uniform for the previous buffer.
-var int_param_uniform: RDUniform
-var float_param_uniform: RDUniform
-
-var hash_size: int = 32
-var hashes: Vector2i = Vector2i.ZERO
+var hashes: Vector2 = Vector2.ZERO
 
 var hash_shader : RID
 var hash_pipeline : RID
-
-var hash_buffer : RID
-var hash_sum_buffer : RID
-var hash_prefix_sum_buffer : RID
-var hash_index_tracker_buffer : RID
-var hash_reindex_buffer : RID
-var hash_params_buffer : RID
 
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
@@ -239,7 +196,7 @@ func _ready() -> void:
 	if walls.is_empty():
 		walls.insert(0, Vector4.ZERO)
 	
-	# Gets the texture resource stored on the shader.
+	# Retrieves references to the texture resources stored on the particle shader
 	agent_data_1_texture_rd = agent_particles.process_material.get_shader_parameter("agent_data")
 	agent_data_2_texture_rd = agent_particles.process_material.get_shader_parameter("agent_data_2")
 	RenderingServer.call_on_render_thread(setup_compute)
@@ -262,15 +219,15 @@ func import_config():
 	
 	if use_spatial_hash:
 		hash_size = parameters["hash_size"]
-		hashes = Vector2i(
+		hashes = Vector2(
 			snappedf(world_size.x / hash_size, 1),
 			snappedf(world_size.y / hash_size, 1),
 		)
 		
-		hash_count = hashes.x * hashes.y
+		hash_count = int(hashes.x * hashes.y)
 		
-		hash_viewer.h_hashes = hashes.x
-		hash_viewer.v_hashes = hashes.y
+		hash_viewer.h_hashes = int(hashes.x)
+		hash_viewer.v_hashes = int(hashes.y)
 	hash_viewer.world_size = world_size
 	hash_viewer.queue_redraw()
 	
@@ -308,8 +265,11 @@ func _process(delta: float) -> void:
 		return
 	
 	time_passed = Time.get_ticks_msec() - start_time
+	@warning_ignore("integer_division")
 	var hours: int = time_passed / 360000
+	@warning_ignore("integer_division")
 	var minutes: int = (time_passed % 360000) / 60000
+	@warning_ignore("integer_division")
 	var seconds: int = (time_passed % 60000) / 1000
 	var ms: int = time_passed % 1000
 	time_passed_label.text = "%02d:%02d:%02d.%03d" % [hours, minutes, seconds, ms]
@@ -325,69 +285,39 @@ func gpu_process(delta: float):
 	if delta > 0:
 		frame += 1
 	
-	#var time_before: float = Time.get_ticks_msec() / 1000.0
+	# Every frame, replace the old StorageResource objects for int_params
+	# and float_params with new ones, to advance the int stage and update the float delta
+	
 	var float_param_buffer_bytes: PackedByteArray = generate_float_parameter_buffer(delta)
-	rendering_device.buffer_update(float_param_buffer, 0, float_param_buffer_bytes.size(), float_param_buffer_bytes)
-	var int_param_buffer_bytes: PackedByteArray = generate_int_parameter_buffer(0)
-	
-	
-	
+	rendering_device.buffer_update(shared_parameters_descriptor.named_resources["float_params"].buffer, 0, float_param_buffer_bytes.size(), float_param_buffer_bytes)
 	# Hash setup
 	if use_spatial_hash:
-		
-		var hashing_start: float = Time.get_ticks_msec() / 1000.0
-		
-		int_param_buffer_bytes = generate_int_parameter_buffer(0) 
-		rendering_device.buffer_update(int_param_buffer, 0, int_param_buffer_bytes.size(), int_param_buffer_bytes)
-		run_compute(hash_pipeline, maxi(count, hash_count))
-		int_param_buffer_bytes = generate_int_parameter_buffer(1) 
-		rendering_device.buffer_update(int_param_buffer, 0, int_param_buffer_bytes.size(), int_param_buffer_bytes)
-		run_compute(hash_pipeline, maxi(count, hash_count))
-		int_param_buffer_bytes = generate_int_parameter_buffer(2) 
-		rendering_device.buffer_update(int_param_buffer, 0, int_param_buffer_bytes.size(), int_param_buffer_bytes)
-		run_compute(hash_pipeline, maxi(count, hash_count))
-		int_param_buffer_bytes = generate_int_parameter_buffer(3) 
-		rendering_device.buffer_update(int_param_buffer, 0, int_param_buffer_bytes.size(), int_param_buffer_bytes)
-		run_compute(hash_pipeline, maxi(count, hash_count))
-		int_param_buffer_bytes = generate_int_parameter_buffer(4) 
-		rendering_device.buffer_update(int_param_buffer, 0, int_param_buffer_bytes.size(), int_param_buffer_bytes)
-		run_compute(hash_pipeline, maxi(count, hash_count))
-		
-		#print("Time: " + str(Time.get_ticks_msec() / 1000.0 - hashing_start))
-	
-	#print("Finished hashing")
+		# Performs all the stages in bin_operations.glsl
+		for n in range(0, 5):
+			run_pipeline(hash_pipeline, n, hash_count)
 	
 	# Wall collisions and velocity stage
-	int_param_buffer_bytes = generate_int_parameter_buffer(0)
-	rendering_device.buffer_update(int_param_buffer, 0, int_param_buffer_bytes.size(), int_param_buffer_bytes)
-	run_compute(agent_pipeline, maxi(count, agent_count))
+	run_pipeline(agent_pipeline, 0, agent_count)
 	
 	RenderingServer.force_sync() # May not be necessary
 	
 	for iteration in maxi(1, parameters["iteration_count"]):
 		# Delta corrections calculations stage
-		int_param_buffer_bytes = generate_int_parameter_buffer(1)
-		rendering_device.buffer_update(int_param_buffer, 0, int_param_buffer_bytes.size(), int_param_buffer_bytes)
-		run_compute(agent_pipeline, maxi(count, agent_count))
-
+		run_pipeline(agent_pipeline, 1, agent_count)
 		RenderingServer.force_sync() # May not be necessary
-		
 		# Delta corrections applications stage
-		int_param_buffer_bytes = generate_int_parameter_buffer(2)
-		rendering_device.buffer_update(int_param_buffer, 0, int_param_buffer_bytes.size(), int_param_buffer_bytes)
-		run_compute(agent_pipeline, maxi(count, agent_count))
+		run_pipeline(agent_pipeline, 2, agent_count)
+		# Final move stage
+		run_pipeline(agent_pipeline, 3, agent_count)
 	
-	# Final move stage
-	int_param_buffer_bytes = generate_int_parameter_buffer(3)
-	rendering_device.buffer_update(int_param_buffer, 0, int_param_buffer_bytes.size(), int_param_buffer_bytes)
-	run_compute(agent_pipeline, maxi(count, agent_count))
-	
-	#print("Time taken: " + str(Time.get_ticks_msec() / 1000.0 - time_before))
-	
-	# Testing saving
-	#simulation_file.saved_floats.append(agent_data_1_texture_rd.get_image().get_data().to_float32_array())
+	# Saving
 	if parameters["save"] == true:
 		sim_file.store_var((agent_data_1_texture_rd.get_image().get_data().to_float32_array()))
+
+func run_pipeline(pipieline: RID, pipeline_stage: int, dispatch_count: int):
+	var int_param_buffer_bytes: PackedByteArray = generate_int_parameter_buffer(pipeline_stage)
+	rendering_device.buffer_update(shared_parameters_descriptor.named_resources["int_params"].buffer, 0, int_param_buffer_bytes.size(), int_param_buffer_bytes)
+	run_compute(pipieline, maxi(count, dispatch_count))
 
 func generate_int_parameter_buffer(stage: int) -> PackedByteArray:
 	var ints: PackedInt32Array = [
@@ -419,7 +349,6 @@ func generate_float_parameter_buffer(delta: float) -> PackedByteArray:
 		0.0 # Padding
 	]
 	
-	
 	# append_array must be used when including an additional array in parameter data
 	var packed_data: PackedFloat32Array = []
 	packed_data.append_array(floats)
@@ -433,19 +362,20 @@ func generate_float_parameter_buffer(delta: float) -> PackedByteArray:
 func run_compute(pipeline: RID, num: int):
 	var compute_list: int = rendering_device.compute_list_begin()
 	rendering_device.compute_list_bind_compute_pipeline(compute_list, pipeline)
-	#rendering_device.compute_list_bind_uniform_set(compute_list, uniform_set, 0)
 	rendering_device.compute_list_bind_uniform_set(compute_list, agent_set, 0)
 	rendering_device.compute_list_bind_uniform_set(compute_list, hash_set, 1)
-	rendering_device.compute_list_bind_uniform_set(compute_list, image_set_1, 2)
-	rendering_device.compute_list_bind_uniform_set(compute_list, image_set_2, 3)
+	rendering_device.compute_list_bind_uniform_set(compute_list, image_set, 2)
+	rendering_device.compute_list_bind_uniform_set(compute_list, shared_parameters_set, 3)
 	rendering_device.compute_list_dispatch(compute_list, ceil(num / 1024.), 1, 1)
 	rendering_device.compute_list_end()
 
 ## Sets up the computer shader once.
 func setup_compute():
-	
-	rendering_device = RenderingServer.get_rendering_device()
-	
+	create_shaders()
+	create_descriptors()
+	create_uniform_sets()
+
+func create_shaders():
 	# Compiles the .glsl to spirv, and then creates the shader instance
 	var shader: RDShaderFile = load("res://Simulation/red_black_agents.glsl")
 	var compiled_shader: RDShaderSPIRV = shader.get_spirv()
@@ -456,158 +386,46 @@ func setup_compute():
 	compiled_shader = shader.get_spirv()
 	hash_shader = rendering_device.shader_create_from_spirv(compiled_shader)
 	hash_pipeline = rendering_device.compute_pipeline_create(hash_shader)
+
+func create_descriptors():
+	agent_data_descriptor.add_resource(StorageResource.create_packed_array_uniform(agent_positions, 0))
+	agent_data_descriptor.add_resource(StorageResource.create_packed_array_uniform(agent_positions, 1)) # Previous positions uniform
+	agent_data_descriptor.add_resource(StorageResource.create_packed_array_uniform(agent_preferred_velocities, 2)) # Normal velocity
+	agent_data_descriptor.add_resource(StorageResource.create_packed_array_uniform(agent_preferred_velocities, 3)) # Preferred velocities
+	agent_data_descriptor.add_resource(StorageResource.create_packed_array_uniform(agent_base_velocities, 4))
+	agent_data_descriptor.add_resource(StorageResource.create_packed_array_uniform(delta_corrections, 5))
+	agent_data_descriptor.add_resource(StorageResource.create_packed_array_uniform(locomotion_targets, 6))
+	agent_data_descriptor.add_resource(StorageResource.create_packed_array_uniform(locomotion_indices, 7))
+	agent_data_descriptor.add_resource(StorageResource.create_packed_array_uniform(retargeting_locomotion_indices, 8))
+	agent_data_descriptor.add_resource(StorageResource.create_packed_array_uniform(retargeting_boxes, 9))
+	agent_data_descriptor.add_resource(StorageResource.create_packed_array_uniform(agent_tracked, 10))
+	agent_data_descriptor.add_resource(StorageResource.create_packed_array_uniform(walls, 11))
 	
+	var hash_int_params: PackedInt32Array = PackedInt32Array([hash_size, hashes.x, hashes.y, hash_count])
+	spatial_hash_descriptor.add_resource(StorageResource.create_packed_array_uniform(hash_int_params, 0))
+	spatial_hash_descriptor.add_resource(StorageResource.create_int_array_uniform(agent_count, 1))
+	spatial_hash_descriptor.add_resource(StorageResource.create_int_array_uniform(hash_count, 2))
+	spatial_hash_descriptor.add_resource(StorageResource.create_int_array_uniform(hash_count, 3))
+	spatial_hash_descriptor.add_resource(StorageResource.create_int_array_uniform(hash_count, 4))
+	spatial_hash_descriptor.add_resource(StorageResource.create_int_array_uniform(agent_count, 5))
 	
-	# Generates the buffers and then the uniform they are mapped to.
-	
-	agent_position_buffer = generate_packed_array_buffer(agent_positions)
-	var agent_position_uniform: RDUniform = generate_compute_uniform(agent_position_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 0)
-	
-	agent_velocity_buffer = generate_packed_array_buffer(agent_velocities)
-	var agent_velocity_uniform: RDUniform = generate_compute_uniform(agent_velocity_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 1)
-	
-	agent_preferred_velocity_buffer = generate_packed_array_buffer(agent_preferred_velocities)
-	var agent_preferred_velocity_uniform: RDUniform = generate_compute_uniform(agent_preferred_velocity_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 2)
-	
-	agent_base_velocities_buffer = generate_packed_array_buffer(agent_base_velocities)
-	var agent_base_velocities_uniform: RDUniform = generate_compute_uniform(agent_base_velocities_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 3)
-	
-	delta_corrections_buffer = generate_packed_array_buffer(delta_corrections)
-	var delta_corrections_uniform: RDUniform = generate_compute_uniform(delta_corrections_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 4)
-	
-	locomotion_targets_buffer = generate_packed_array_buffer(locomotion_targets)
-	var locomotion_targets_uniform: RDUniform = generate_compute_uniform(locomotion_targets_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 5)
-	
-	locomotion_indices_buffer = generate_packed_array_buffer(locomotion_indices)
-	var locomotion_indices_uniform: RDUniform = generate_compute_uniform(locomotion_indices_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 6)
-	
-	retargeting_locomotion_indices_buffer = generate_packed_array_buffer(retargeting_locomotion_indices)
-	var retargeting_locomotion_indices_uniform: RDUniform = generate_compute_uniform(retargeting_locomotion_indices_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 7)
-	
-	retargeting_boxes_buffer = generate_packed_array_buffer(retargeting_boxes)
-	var retargeting_boxes_uniform: RDUniform = generate_compute_uniform(retargeting_boxes_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 8)
-	
-	agent_tracked_buffer = generate_packed_array_buffer(agent_tracked)
-	var agent_tracked_uniform: RDUniform = generate_compute_uniform(agent_tracked_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 9)
-	
-	walls_buffer = generate_packed_array_buffer(walls)
-	var walls_uniform: RDUniform = generate_compute_uniform(walls_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 10)
-	
+	image_descriptor.add_resource(StorageResource.create_image_uniform(agent_data_1_texture_rd, image_size, 0))
+	image_descriptor.add_resource(StorageResource.create_image_uniform(agent_data_2_texture_rd, image_size, 1))
+
 	var debugging_data: PackedFloat32Array = [0.0, 0.0, 0.0, 0.0]
-	debugging_data_buffer = generate_packed_array_buffer(debugging_data)
-	debugging_data_uniform = generate_compute_uniform(debugging_data_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 11)
 	
-	var int_param_buffer_bytes: PackedByteArray = generate_int_parameter_buffer(0)
-	int_param_buffer = rendering_device.storage_buffer_create(int_param_buffer_bytes.size(), int_param_buffer_bytes)
-	int_param_uniform = generate_compute_uniform(int_param_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 12)
-	
-	var float_param_buffer_bytes: PackedByteArray = generate_float_parameter_buffer(0)
-	float_param_buffer = rendering_device.storage_buffer_create(float_param_buffer_bytes.size(), float_param_buffer_bytes)
-	float_param_uniform = generate_compute_uniform(float_param_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 13)
-	
-	#region Hash Descriptor Set
-	
-	var hash_float_param_buffer_bytes: PackedByteArray = PackedInt32Array([hash_size, hashes.x, hashes.y, hash_count]).to_byte_array()
-	hash_params_buffer = rendering_device.storage_buffer_create(hash_float_param_buffer_bytes.size(), hash_float_param_buffer_bytes)
-	var hash_params_uniform: RDUniform = generate_compute_uniform(hash_params_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 0)
-	
-	hash_buffer = generate_int_buffer(agent_count)
-	var hash_buffer_uniform: RDUniform = generate_compute_uniform(hash_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 1)
-	
-	hash_sum_buffer = generate_int_buffer(hash_count)
-	var hash_sum_buffer_uniform: RDUniform = generate_compute_uniform(hash_sum_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 2)
-	
-	hash_prefix_sum_buffer = generate_int_buffer(hash_count)
-	var hash_prefix_sum_buffer_uniform: RDUniform = generate_compute_uniform(hash_prefix_sum_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 3)
-	
-	hash_index_tracker_buffer = generate_int_buffer(hash_count)
-	var hash_index_tracker_buffer_uniform: RDUniform = generate_compute_uniform(hash_index_tracker_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 4)
-	
-	hash_reindex_buffer = generate_int_buffer(agent_count)
-	var hash_reindex_buffer_uniform: RDUniform = generate_compute_uniform(hash_reindex_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 5)
-	
-	#endregion
-	
-	# Prepares the image data to bind it to the GPU
-	var texture_format: RDTextureFormat = RDTextureFormat.new()
-	texture_format.width = image_size
-	texture_format.height = image_size
-	
-	# Can be changed to a 64-bit format if the extra precision is ever needed.
-	texture_format.format = RenderingDevice.DATA_FORMAT_R32G32B32A32_SFLOAT 
-	texture_format.usage_bits = RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT | RenderingDevice.TEXTURE_USAGE_STORAGE_BIT | RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
-	
-	var texture_view: RDTextureView = RDTextureView.new()
-	agent_data_1_buffer = rendering_device.texture_create(texture_format, texture_view, [])
-	agent_data_1_texture_rd.texture_rd_rid = agent_data_1_buffer
-	var agent_data_1_buffer_uniform = generate_compute_uniform(agent_data_1_buffer, RenderingDevice.UNIFORM_TYPE_IMAGE, 0)
-	
-	var texture_view_2: RDTextureView = RDTextureView.new()
-	agent_data_2_buffer = rendering_device.texture_create(texture_format, texture_view_2, [])
-	agent_data_2_texture_rd.texture_rd_rid = agent_data_2_buffer
-	var agent_data_2_buffer_uniform = generate_compute_uniform(agent_data_2_buffer, RenderingDevice.UNIFORM_TYPE_IMAGE, 0)
-	
-	agent_bindings = [
-		agent_position_uniform, # 0
-		agent_velocity_uniform, # 1
-		agent_preferred_velocity_uniform, # 2
-		agent_base_velocities_uniform, # 3
-		delta_corrections_uniform, # 4
-		locomotion_targets_uniform, # 5
-		locomotion_indices_uniform, # 6
-		retargeting_locomotion_indices_uniform, # 7
-		retargeting_boxes_uniform, # 8
-		agent_tracked_uniform, # 9
-		walls_uniform, # 10
-		debugging_data_uniform, # 11
-		int_param_uniform, # 12
-		float_param_uniform # 13
-	]
-	
-	hash_bindings = [
-		hash_params_uniform, # 0
-		hash_buffer_uniform, # 1
-		hash_sum_buffer_uniform, # 2
-		hash_prefix_sum_buffer_uniform, # 3
-		hash_index_tracker_buffer_uniform, # 4
-		hash_reindex_buffer_uniform, # 5
-	]
-	
-	# For some reason the system cannot recognize multiple images in one descriptor set so I have
-	# to make separate bindings for each uniform
-	image_bindings_1 = [
-		agent_data_1_buffer_uniform
-	]
-	
-	image_bindings_2 = [
-		agent_data_2_buffer_uniform
-	]
-	
-	agent_set = rendering_device.uniform_set_create(agent_bindings, agent_compute_shader, 0)
-	hash_set = rendering_device.uniform_set_create(hash_bindings, agent_compute_shader, 1)
-	image_set_1 = rendering_device.uniform_set_create(image_bindings_1, agent_compute_shader, 2)
-	image_set_2 = rendering_device.uniform_set_create(image_bindings_2, agent_compute_shader, 3)
-	
+	shared_parameters_descriptor.add_resource(StorageResource.create_params_uniform(generate_int_parameter_buffer(0), 0), "int_params")
+	shared_parameters_descriptor.add_resource(StorageResource.create_params_uniform(generate_float_parameter_buffer(0), 1), "float_params")
+	shared_parameters_descriptor.add_resource(StorageResource.create_packed_array_uniform(debugging_data, 2))
 
-func generate_packed_array_buffer(data) -> RID:
-	var data_bytes: PackedByteArray = data.to_byte_array()
-	var data_buffer: RID = rendering_device.storage_buffer_create(data_bytes.size(), data_bytes)
-	return data_buffer
+func create_uniform_sets():
+	agent_set = make_set(agent_data_descriptor, agent_compute_shader, 0)
+	hash_set = make_set(spatial_hash_descriptor, hash_shader, 1)
+	image_set = make_set(image_descriptor, agent_compute_shader, 2)
+	shared_parameters_set = make_set(shared_parameters_descriptor, agent_compute_shader, 3)
 
-func generate_int_buffer(size: int) -> RID:
-	var data: PackedInt32Array = []
-	data.resize(size)
-	var data_buffer_bytes = data.to_byte_array()
-	var data_buffer = rendering_device.storage_buffer_create(data_buffer_bytes.size(), data_buffer_bytes)
-	return data_buffer
-
-
-func generate_compute_uniform(buffer: RID, type: RenderingDevice.UniformType, binding: int) -> RDUniform:
-	var uniform: RDUniform = RDUniform.new()
-	uniform.uniform_type = type
-	uniform.binding = binding
-	uniform.add_id(buffer)
-	return uniform
+func make_set(descriptor: DescriptorSetResource, shader: RID, shader_set) -> RID:
+	return rendering_device.uniform_set_create(descriptor.get_uniforms(), shader, shader_set)
 
 ## Called on scene exit.
 func _exit_tree() -> void:
@@ -615,27 +433,17 @@ func _exit_tree() -> void:
 
 ## Frees up the GPU memory.
 func free_resources():
-	rendering_device.free_rid(agent_data_1_buffer)
-	rendering_device.free_rid(agent_data_2_buffer)
-	#rendering_device.free_rid(agent_radii_buffer)
-	rendering_device.free_rid(agent_tracked_buffer)
-	rendering_device.free_rid(agent_velocity_buffer)
-	rendering_device.free_rid(agent_preferred_velocity_buffer)
-	rendering_device.free_rid(delta_corrections_buffer)
-	rendering_device.free_rid(locomotion_targets_buffer)
-	rendering_device.free_rid(walls_buffer)
-	rendering_device.free_rid(agent_position_buffer)
-	rendering_device.free_rid(uniform_set)
-	rendering_device.free_rid(hash_set)
 	rendering_device.free_rid(agent_set)
-	rendering_device.free_rid(image_set_1)
-	rendering_device.free_rid(image_set_2)
+	rendering_device.free_rid(hash_set)
+	rendering_device.free_rid(image_set)
+	rendering_device.free_rid(shared_parameters_set)
+	
 	rendering_device.free_rid(agent_pipeline)
-	rendering_device.free_rid(agent_compute_shader)
-	rendering_device.free_rid(hash_buffer)
-	rendering_device.free_rid(hash_sum_buffer)
-	rendering_device.free_rid(hash_params_buffer)
-	rendering_device.free_rid(hash_reindex_buffer)
-	rendering_device.free_rid(hash_prefix_sum_buffer)
-	rendering_device.free_rid(hash_index_tracker_buffer)
 	rendering_device.free_rid(hash_pipeline)
+	rendering_device.free_rid(agent_compute_shader)
+	rendering_device.free_rid(hash_shader)
+	
+	agent_data_descriptor.freeBindings()
+	spatial_hash_descriptor.freeBindings()
+	image_descriptor.freeBindings()
+	shared_parameters_descriptor.freeBindings()

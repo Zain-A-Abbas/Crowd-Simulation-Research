@@ -238,7 +238,4 @@ func generate_agents(red_black_agents: RedBlackAgents):
 		RedBlackAgents.Scenarios.CROWD_CIRCULATING_OBJECT:
 			crowd_circulating_object(red_black_agents)
 	
-	red_black_agents.agent_positions.append_array(red_black_agents.agent_positions.duplicate())
 	red_black_agents.count = red_black_agents.agent_count
-	print(red_black_agents.agent_positions.size())
-	print(red_black_agents.agent_count)

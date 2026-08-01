@@ -102,8 +102,8 @@ void longRangeConstraint(int i, int j) {
     vec2 ip = agent_pos.data[i];
     vec2 jp = agent_pos.data[j];
 
-    vec2 i_start_pos = agent_pos.data[i + int_params.agent_count];
-    vec2 j_start_pos = agent_pos.data[j + int_params.agent_count];
+    vec2 i_start_pos = agent_prev_pos.data[i];
+    vec2 j_start_pos = agent_prev_pos.data[j];
 
     const float dist = distance(ip, jp);
     
@@ -202,9 +202,9 @@ void correctionsStage(int idx) {
 
         if (int_params.use_spatial_hash == 1) {
             int agent_hash = hash.data[idx];
-            vec2 hash_location = one_to_two(agent_hash, hash_params.hash_x);
+            ivec2 hash_location = one_to_two(agent_hash, hash_params.hash_x);
 
-            vec2 current_hash = hash_location;
+            ivec2 current_hash = hash_location;
             
             for (int y_offset = -1; y_offset < 2; y_offset++) {
                 current_hash.y = hash_location.y + y_offset;
@@ -275,7 +275,7 @@ void moveStage(int idx) {
 
     
     // idx + params.agent_count is the old position
-    agent_vel.data[idx] = (agent_pos.data[idx] - agent_pos.data[idx + int_params.agent_count]) / float_params.delta; // set the velocity to the actual position moved
+    agent_vel.data[idx] = (agent_pos.data[idx] - agent_prev_pos.data[idx]) / float_params.delta; // set the velocity to the actual position moved
 
     agent_vel.data[idx] = clamp2D(agent_vel.data[idx].x, agent_vel.data[idx].y, MAX_SPEED);
     agent_vel.data[idx] = ksi * agent_pref_vel.data[idx]  + (1.0-ksi) * agent_vel.data[idx]; // Blending current velocity with preferred velocity
@@ -285,7 +285,7 @@ void moveStage(int idx) {
     if (agent_pos.data[idx].x < 0) {agent_pos.data[idx].x += float_params.world_width;}
     if (agent_pos.data[idx].y < 0) {agent_pos.data[idx].y += float_params.world_height;}
 
-    agent_pos.data[idx + int_params.agent_count] = agent_pos.data[idx]; // Updates the "start of frame" positions for the next frame
+    agent_prev_pos.data[idx] = agent_pos.data[idx]; // Updates the "start of frame" positions for the next frame
 
 
     if (int_params.use_spatial_hash > 0.0) {

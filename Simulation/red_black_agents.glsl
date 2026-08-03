@@ -164,7 +164,7 @@ void longRangeConstraint(int i, int j) {
     }
 }
 
-vec2 rotate_velocity(int idx) {
+vec2 rotate_towards_locomotion_target(int idx) {
     vec2 curr_pos = agent_pos.data[idx];
     vec2 pref_vel = agent_pref_vel.data[idx];
     vec2 loc_targ = locomotion_targets.data[locomotion_indices.data[idx]];
@@ -299,7 +299,7 @@ void moveStage(int idx) {
             agent_pref_vel.data[idx] = vec2(0.0);
             agent_vel.data[idx] = vec2(0.0);
         } else {    
-            agent_pref_vel.data[idx] = rotate_velocity(idx);
+            agent_pref_vel.data[idx] = rotate_towards_locomotion_target(idx);
         }
 
         if (agent_pos.data[idx].x > retargeting_boxes.data[locomotion_indices.data[idx]].x

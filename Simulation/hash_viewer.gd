@@ -1,6 +1,8 @@
 extends Node2D
 class_name HashViewer
 
+## Renders the number of agents
+
 var world_size: Vector2 = Vector2.ZERO
 var h_hashes: int = 0
 var v_hashes: int = 0
@@ -15,7 +17,6 @@ func _draw() -> void:
 					rect_size
 				)
 				draw_rect(hash_rect, Color(0.4, 0.8, 0.9), false, 1.0)
-	
 	
 	var world_rect: Rect2 = Rect2(
 		Vector2.ZERO,

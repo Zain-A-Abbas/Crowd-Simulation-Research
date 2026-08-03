@@ -1,9 +1,1 @@
-{
-	"agent_count":101.0
-	,"max_velocity":10.0,
-	"radius":16,
-	"scenario":
-	"LONG_RANGE_CONSTRAINT",
-	"window_x":1920,
-	"window_y":1080
-}
+{"agent_count":512.0,"circle_radius":256.0,"constraint_type":"LONG_RANGE","disable_rendering":false,"hash_size":64.0,"iteration_count":1.0,"max_velocity":16.0,"neighbour_visualization_radius":128.0,"opposing_groups_x_distance":100.0,"opposing_groups_y_offset":4.0,"radius":8.0,"save":false,"scenario":"BASE_SCENARIO","use_hashes":true,"walls":[],"window_height":1024.0,"window_width":1024.0,"world_height":1024.0,"world_width":1024.0}

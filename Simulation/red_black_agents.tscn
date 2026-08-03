@@ -1,12 +1,22 @@
 [gd_scene format=3 uid="uid://ca56nxvpxws5u"]
 
 [ext_resource type="Script" uid="uid://db1i01tuitgo1" path="res://Simulation/red_black_agents.gd" id="1_8sook"]
-[ext_resource type="Texture2D" uid="uid://b37l6ubs03hr7" path="res://Simulation/32x32.png" id="2_8sook"]
+[ext_resource type="Texture2D" uid="uid://b37l6ubs03hr7" path="res://Visual-Assets/32x32.png" id="2_8sook"]
 [ext_resource type="Script" uid="uid://b5tomjrg561d4" path="res://Simulation/hash_viewer.gd" id="2_mie0a"]
-[ext_resource type="Shader" uid="uid://dotxh30jv7r2f" path="res://Simulation/red_black_agents_shader.gdshader" id="3_a4fjh"]
+[ext_resource type="Shader" uid="uid://dotxh30jv7r2f" path="res://Simulation/red_black_agents_rendering.gdshader" id="3_a4fjh"]
 [ext_resource type="Script" uid="uid://dvrocbbi1svck" path="res://Simulation/box_rendering.gd" id="3_q1o4n"]
+[ext_resource type="Script" uid="uid://gd5ihy404isc" path="res://Simulation/gpu_state.gd" id="3_w4xpl"]
+[ext_resource type="Script" uid="uid://k1cw3uwmuwwp" path="res://Simulation/config_state.gd" id="4_bp7j1"]
 [ext_resource type="Script" uid="uid://ctiw8jlsb8qgj" path="res://Simulation/camera_2d.gd" id="5_a4fjh"]
+[ext_resource type="Script" uid="uid://ba48uya7l8pxe" path="res://Simulation/simulation_state.gd" id="5_nw3r0"]
 [ext_resource type="Script" uid="uid://c6kowtqamo1k" path="res://Simulation/agent_generator.gd" id="6_h3wmb"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8sook"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0, 0, 0, 0.168627)
 
 [sub_resource type="Texture2DRD" id="Texture2DRD_hejfd"]
 
@@ -16,42 +26,34 @@
 shader = ExtResource("3_a4fjh")
 shader_parameter/agent_data = SubResource("Texture2DRD_hejfd")
 shader_parameter/agent_data_2 = SubResource("Texture2DRD_h3wmb")
-shader_parameter/radius = 0.0
+shader_parameter/radius = 16.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8sook"]
-content_margin_left = 8.0
-content_margin_top = 8.0
-content_margin_right = 8.0
-content_margin_bottom = 8.0
-bg_color = Color(0, 0, 0, 0.168627)
-
-[node name="Node2D" type="Node2D"]
+[node name="RedBlackAgents" type="Node2D" unique_id=1449417360]
 script = ExtResource("1_8sook")
 
-[node name="AgentGenerator" type="Node" parent="."]
+[node name="AgentGenerator" type="Node" parent="." unique_id=678673630]
 unique_name_in_owner = true
 script = ExtResource("6_h3wmb")
 
-[node name="BoxRendering" type="Node2D" parent="."]
+[node name="GPUState" type="Node" parent="." unique_id=1345550239]
 unique_name_in_owner = true
-script = ExtResource("3_q1o4n")
+script = ExtResource("3_w4xpl")
+metadata/_custom_type_script = "uid://gd5ihy404isc"
 
-[node name="AgentParticles" type="GPUParticles2D" parent="."]
-position = Vector2(567, 319)
-texture = ExtResource("2_8sook")
-lifetime = 10.0
-explosiveness = 1.0
-fixed_fps = 24
-visibility_rect = Rect2(-512, -512, 65536, 65536)
-process_material = SubResource("ShaderMaterial_3owe0")
-
-[node name="HashViewer" type="Node2D" parent="."]
+[node name="ConfigState" type="Node" parent="." unique_id=1939610131]
 unique_name_in_owner = true
-script = ExtResource("2_mie0a")
+script = ExtResource("4_bp7j1")
+metadata/_custom_type_script = "uid://k1cw3uwmuwwp"
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="SimulationState" type="Node" parent="." unique_id=1584819304]
+unique_name_in_owner = true
+script = ExtResource("5_nw3r0")
+metadata/_custom_type_script = "uid://ba48uya7l8pxe"
 
-[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer"]
+[node name="UserInterface" type="CanvasLayer" parent="." unique_id=399771630]
+unique_name_in_owner = true
+
+[node name="MarginContainer" type="MarginContainer" parent="UserInterface" unique_id=1819038753]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -63,17 +65,17 @@ theme_override_constants/margin_right = 32
 theme_override_constants/margin_bottom = 32
 metadata/_edit_lock_ = true
 
-[node name="PanelContainer" type="PanelContainer" parent="CanvasLayer/MarginContainer"]
+[node name="PanelContainer" type="PanelContainer" parent="UserInterface/MarginContainer" unique_id=103859465]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_8sook")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/MarginContainer/PanelContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="UserInterface/MarginContainer/PanelContainer" unique_id=336696415]
 layout_mode = 2
 
-[node name="TimePassedLabel" type="Label" parent="CanvasLayer/MarginContainer/PanelContainer/VBoxContainer"]
+[node name="TimePassedLabel" type="Label" parent="UserInterface/MarginContainer/PanelContainer/VBoxContainer" unique_id=344018609]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
@@ -81,7 +83,7 @@ theme_override_constants/outline_size = 8
 theme_override_font_sizes/font_size = 20
 text = "00:00:00.000"
 
-[node name="FPSLabel" type="Label" parent="CanvasLayer/MarginContainer/PanelContainer/VBoxContainer"]
+[node name="FPSLabel" type="Label" parent="UserInterface/MarginContainer/PanelContainer/VBoxContainer" unique_id=1235558576]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
@@ -89,23 +91,42 @@ theme_override_constants/outline_size = 8
 theme_override_font_sizes/font_size = 20
 text = "FPS: "
 
-[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/MarginContainer/PanelContainer/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="UserInterface/MarginContainer/PanelContainer/VBoxContainer" unique_id=1775947112]
 layout_mode = 2
 
-[node name="PauseButton" type="Button" parent="CanvasLayer/MarginContainer/PanelContainer/VBoxContainer/HBoxContainer"]
+[node name="PauseButton" type="Button" parent="UserInterface/MarginContainer/PanelContainer/VBoxContainer/HBoxContainer" unique_id=247757399]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Pause"
 
-[node name="SaveButton" type="Button" parent="CanvasLayer/MarginContainer/PanelContainer/VBoxContainer/HBoxContainer"]
+[node name="SaveButton" type="Button" parent="UserInterface/MarginContainer/PanelContainer/VBoxContainer/HBoxContainer" unique_id=1229623411]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Save"
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="Rendering" type="Node2D" parent="." unique_id=1858685276]
+
+[node name="BoxRendering" type="Node2D" parent="Rendering" unique_id=403999]
 unique_name_in_owner = true
-anchor_mode = 0
+script = ExtResource("3_q1o4n")
+
+[node name="AgentParticles" type="GPUParticles2D" parent="Rendering" unique_id=747261436]
+unique_name_in_owner = true
+position = Vector2(567, 319)
+texture = ExtResource("2_8sook")
+lifetime = 10.0
+explosiveness = 1.0
+fixed_fps = 24
+visibility_rect = Rect2(-512, -512, 65536, 65536)
+process_material = SubResource("ShaderMaterial_3owe0")
+
+[node name="HashViewer" type="Node2D" parent="Rendering" unique_id=555940917]
+unique_name_in_owner = true
+script = ExtResource("2_mie0a")
+
+[node name="Camera2D" type="Camera2D" parent="Rendering" unique_id=52641513]
+unique_name_in_owner = true
 limit_smoothed = true
 script = ExtResource("5_a4fjh")

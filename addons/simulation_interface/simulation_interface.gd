@@ -31,8 +31,8 @@ const WALL_INFORMATION = preload("res://addons/simulation_interface/wall_informa
 
 @onready var error_label: Label = %ErrorLabel
 
-var config_file_location: String = RedBlackAgents.RED_BLACK_AGENTS_CONFIG_FILE
-const RED_BLACK_AGENTS_PATH: String = "res://Simulation/red_black_agents.tscn"
+var config_file_location: String = ConfigState.RED_BLACK_AGENTS_CONFIG_FILE
+@export var red_black_agents_scene: PackedScene
 
 func _ready() -> void:
 	circle_simulation_options.visible = false
@@ -41,17 +41,15 @@ func _ready() -> void:
 	spatial_hashes_toggle.toggled.connect(hash_settings_hbox.set_visible.bind())
 	scenario_option.item_selected.connect(set_scenario)
 	scenario_option.clear()
-	for scenario in RedBlackAgents.Scenarios.keys():
+	constraint_type.clear()
+	for scenario in ConfigState.Scenarios.keys():
 		scenario_option.add_item(scenario)
+	for constraint in ConfigState.ConstraintTypes.keys():
+		constraint_type.add_item(constraint)
 	
 	add_wall_button.pressed.connect(add_wall_instance)
 
-func start_simulation():
-	if (step_decimals(window_x_spin_box.value / hashes_spin_box.value) > 0.0 || step_decimals(window_y_spin_box.value / hashes_spin_box.value) > 0.0):
-		set_error_text("Hash count must be divisible by window width and height")
-		return
-	
-	
+func save_simulation():
 	var param_dict: Dictionary[String, Variant] = {
 		"agent_count": agent_count_spin_box.value,
 		"max_velocity": max_velocity_spinbox.value,
@@ -65,22 +63,31 @@ func start_simulation():
 		"world_height": world_height_spin_box.value,
 		"use_hashes": spatial_hashes_toggle.button_pressed,
 		"hash_size": hashes_spin_box.value,
-		"neighbour_radius": neighbour_radius_spin_box.value,
+		"neighbour_visualization_radius": neighbour_radius_spin_box.value,
 		"circle_radius": circle_radius_spinbox.value,
 		"opposing_groups_x_distance": opposing_distance_spinbox_x.value,
 		"opposing_groups_y_offset": opposing_distance_spinbox_y.value,
-		"constraint_type": constraint_type.selected,
+		"constraint_type": constraint_type.get_item_text(constraint_type.selected),
 		"walls": get_wall_data(),
 		"iteration_count": iteration_count_spinbox.value
 	}
 	
-	var config_file: FileAccess = FileAccess.open(config_file_location, FileAccess.WRITE)
+	var config_file: FileAccess = FileAccess.open(config_file_location, FileAccess.WRITE_READ)
 	config_file.store_line(JSON.stringify(param_dict))
+	config_file.flush()
 	config_file.close()
+
+func start_simulation():
+	if (step_decimals(window_x_spin_box.value / hashes_spin_box.value) > 0.0 || step_decimals(window_y_spin_box.value / hashes_spin_box.value) > 0.0):
+		set_error_text("Hash count must be divisible by window width and height")
+		return
+	
+	save_simulation()
+
 	if Engine.is_editor_hint():
-		EditorInterface.play_custom_scene(RED_BLACK_AGENTS_PATH)
+		EditorInterface.play_custom_scene(red_black_agents_scene.resource_path)
 	else:
-		get_tree().change_scene_to_file(RED_BLACK_AGENTS_PATH)
+		get_tree().change_scene_to_packed(red_black_agents_scene)
 
 func set_error_text(text: String):
 	error_label.text = text
@@ -88,10 +95,10 @@ func set_error_text(text: String):
 	error_label.text = ""
 
 func set_scenario(idx: int):
-	circle_simulation_options.visible = is_scenario(RedBlackAgents.Scenarios.CIRCLE_POSITION_EXCHANGE)
-	opposing_agents_options.visible = is_scenario(RedBlackAgents.Scenarios.OPPOSING_SMALL_GROUPS) || is_scenario(RedBlackAgents.Scenarios.OPPOSING_LARGE_GROUPS)
+	circle_simulation_options.visible = is_scenario(ConfigState.Scenarios.CIRCLE_POSITION_EXCHANGE)
+	opposing_agents_options.visible = is_scenario(ConfigState.Scenarios.OPPOSING_SMALL_GROUPS) || is_scenario(ConfigState.Scenarios.OPPOSING_LARGE_GROUPS)
 	
-	if is_scenario(RedBlackAgents.Scenarios.CROWD_CIRCULATING_OBJECT):
+	if is_scenario(ConfigState.Scenarios.CROWD_CIRCULATING_OBJECT):
 		window_x_spin_box.editable = false
 		window_y_spin_box.editable = false
 		world_width_spin_box.editable = false
@@ -110,9 +117,9 @@ func set_scenario(idx: int):
 		world_height_spin_box.editable = true
 		hashes_spin_box.editable = true
 
-func is_scenario(scenario: RedBlackAgents.Scenarios):
+func is_scenario(scenario: ConfigState.Scenarios):
 	var scenario_text: String = scenario_option.get_item_text(scenario_option.selected)
-	return RedBlackAgents.Scenarios[scenario_text] == scenario
+	return ConfigState.Scenarios[scenario_text] == scenario
 
 func add_wall_instance():
 	var new_wall_instance: WallInformation = WALL_INFORMATION.instantiate()

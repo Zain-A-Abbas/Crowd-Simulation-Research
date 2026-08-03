@@ -26,6 +26,12 @@ static func create_int_array_uniform(size: int, _binding: int, type: RenderingDe
 	data.resize(size)
 	return create_packed_array_uniform(data, _binding, type)
 
+## Same as above, but for floats
+static func create_float_array_uniform(size: int, _binding: int, type: RenderingDevice.UniformType = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER) -> StorageResource:
+	var data: PackedFloat32Array = PackedFloat32Array()
+	data.resize(size)
+	return create_packed_array_uniform(data, _binding, type)
+
 static func create_image_uniform(_texture_rd: Texture2DRD, texture_size: int, _binding: int) -> StorageResource: # texture_size assumes square image
 	# Prepares the image data to bind it to the GPU
 	var texture_format: RDTextureFormat = RDTextureFormat.new()
@@ -53,6 +59,9 @@ static func create_params_uniform(data: PackedByteArray, _binding: int) -> Stora
 
 static func generate_packed_array_buffer(data) -> RID:
 	var data_bytes: PackedByteArray = data.to_byte_array()
+	# If 0, it means that an empty array was provided due to not being relevant for the current simulation
+	if data_bytes.size() == 0:
+		data_bytes.resize(1)
 	var data_buffer: RID = rendering_device.storage_buffer_create(data_bytes.size(), data_bytes)
 	return data_buffer
 

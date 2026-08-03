@@ -2,9 +2,10 @@
 
 [ext_resource type="Script" uid="uid://ddpo80wpe4r7n" path="res://addons/simulation_interface/simulation_interface.gd" id="1_picg5"]
 [ext_resource type="Theme" uid="uid://c456o0y7vi54c" path="res://addons/simulation_interface/interface_theme.tres" id="1_xvj4m"]
+[ext_resource type="PackedScene" uid="uid://ca56nxvpxws5u" path="res://Simulation/red_black_agents.tscn" id="3_rf16b"]
 
 [node name="SimulationInterface" type="MarginContainer" unique_id=385893665]
-anchors_preset = 15
+anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
@@ -15,13 +16,13 @@ theme_override_constants/margin_top = 32
 theme_override_constants/margin_right = 32
 theme_override_constants/margin_bottom = 32
 script = ExtResource("1_picg5")
+red_black_agents_scene = ExtResource("3_rf16b")
 metadata/_edit_lock_ = true
 
 [node name="VBoxContainer" type="ScrollContainer" parent="." unique_id=1398278307]
 custom_minimum_size = Vector2(0, 576)
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer" unique_id=2121938704]
@@ -62,7 +63,7 @@ unique_name_in_owner = true
 layout_mode = 2
 selected = 0
 item_count = 8
-popup/item_0/text = "DISTANCE_CONSTRAINT"
+popup/item_0/text = "BASE_SCENARIO"
 popup/item_0/id = 0
 popup/item_1/text = "OPPOSING_AGENTS"
 popup/item_1/id = 1
@@ -89,11 +90,11 @@ text = "Constraint Type"
 [node name="ConstraintType" type="OptionButton" parent="VBoxContainer/VBoxContainer/HBoxContainer8" unique_id=856424340]
 unique_name_in_owner = true
 layout_mode = 2
-selected = 1
+selected = 0
 item_count = 2
-popup/item_0/text = "Long Range"
+popup/item_0/text = "LONG_RANGE"
 popup/item_0/id = 0
-popup/item_1/text = "Short Range"
+popup/item_1/text = "SHORT_RANGE"
 popup/item_1/id = 1
 
 [node name="OpposingAgentsOptions" type="HBoxContainer" parent="VBoxContainer/VBoxContainer" unique_id=2069990837]

@@ -97,14 +97,27 @@ layout_mode = 2
 [node name="PauseButton" type="Button" parent="UserInterface/MarginContainer/PanelContainer/VBoxContainer/HBoxContainer" unique_id=247757399]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 20
 text = "Pause"
 
 [node name="SaveButton" type="Button" parent="UserInterface/MarginContainer/PanelContainer/VBoxContainer/HBoxContainer" unique_id=1229623411]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 20
 text = "Save"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="UserInterface/MarginContainer/PanelContainer/VBoxContainer" unique_id=1914840564]
+layout_mode = 2
+
+[node name="ZoomInButton" type="Button" parent="UserInterface/MarginContainer/PanelContainer/VBoxContainer/HBoxContainer2" unique_id=396994392]
+layout_mode = 2
+text = "Zoom In (Z)"
+
+[node name="ZoomOutButton" type="Button" parent="UserInterface/MarginContainer/PanelContainer/VBoxContainer/HBoxContainer2" unique_id=564475896]
+layout_mode = 2
+text = "Zoom Out (X)"
 
 [node name="Rendering" type="Node2D" parent="." unique_id=1858685276]
 
@@ -130,3 +143,6 @@ script = ExtResource("2_mie0a")
 unique_name_in_owner = true
 limit_smoothed = true
 script = ExtResource("5_a4fjh")
+
+[connection signal="pressed" from="UserInterface/MarginContainer/PanelContainer/VBoxContainer/HBoxContainer2/ZoomInButton" to="Rendering/Camera2D" method="zoom_in"]
+[connection signal="pressed" from="UserInterface/MarginContainer/PanelContainer/VBoxContainer/HBoxContainer2/ZoomOutButton" to="Rendering/Camera2D" method="zoom_out"]
